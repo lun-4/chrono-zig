@@ -13,7 +13,7 @@ pub fn hhmmss_offset_to_s(_string: []const u8, idx: *usize) !i32 {
         idx.* += 1;
     }
 
-    for (string) |c, i| {
+    for (string, 0..) |c, i| {
         if (!(std.ascii.isDigit(c) or c == ':')) {
             string = string[0..i];
             break;
@@ -45,4 +45,3 @@ pub fn hhmmss_offset_to_s(_string: []const u8, idx: *usize) !i32 {
 
     return result * sign;
 }
-

@@ -83,9 +83,9 @@ pub const NaiveDate = struct {
     pub fn succ(this: @This()) !@This() {
         const of = this._of.succ();
         if (!of.valid()) {
-            var new_year: YearInt = undefined;
-            if (@addWithOverflow(YearInt, this._year, 1, &new_year)) return error.Overflow;
-            return yo(new_year, 1);
+            const result = @addWithOverflow(this._year, 1);
+            if (result.@"1" == 1) return error.Overflow;
+            return yo(result.@"0", 1);
         } else {
             return @This(){
                 ._year = this._year,
@@ -97,9 +97,9 @@ pub const NaiveDate = struct {
     pub fn pred(this: @This()) !@This() {
         const of = this._of.pred();
         if (!of.valid()) {
-            var new_year: YearInt = undefined;
-            if (@subWithOverflow(YearInt, this._year, 1, &new_year)) return error.Overflow;
-            return ymd(new_year, 12, 31);
+            const result = @subWithOverflow(this._year, 1);
+            if (result.@"1" == 1) return error.Overflow;
+            return ymd(result.@"0", 12, 31);
         } else {
             return @This(){
                 ._year = this._year,

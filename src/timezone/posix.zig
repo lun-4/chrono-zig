@@ -226,7 +226,7 @@ fn parse_designation(string: []const u8, idx: *usize) ![]const u8 {
     var start = idx.*;
     while (idx.* < string.len) : (idx.* += 1) {
         if ((quoted and string[idx.*] == '>') or
-            (!quoted and !std.ascii.isAlpha(string[idx.*])))
+            (!quoted and !std.ascii.isAlphanumeric(string[idx.*])))
         {
             const designation = string[start..idx.*];
             if (quoted) idx.* += 1;

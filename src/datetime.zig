@@ -65,9 +65,11 @@ pub const NaiveDateTime = struct {
             return error.InvalidDate;
         }
         var days_abs = @intCast(i32, days);
-        if (@addWithOverflow(i32, days_abs, DAYS_AFTER_ZERO_EPOCH, &days_abs)) {
+        const result = @addWithOverflow(days_abs, DAYS_AFTER_ZERO_EPOCH);
+        if (result.@"1" == 1) {
             return error.InvalidDate;
         }
+        days_abs = result.@"0";
 
         const date = try NaiveDate.from_num_days_from_ce(days_abs);
 
