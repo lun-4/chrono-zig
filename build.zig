@@ -17,7 +17,7 @@ pub fn build(b: *Builder) void {
     const skip_non_native = b.option(bool, "skip-non-native", "Whether to skip building non-native tests and examples. Only applies to `run-tests-and-build-examples`") orelse false;
 
     const chrono = b.addModule("chrono", .{
-        .root_source_file = .{ .path = "src/lib.zig" },
+        .root_source_file = b.path("src/lib.zig"),
     });
 
     const test_step = b.step("test", "Run tests for the current target");
@@ -57,7 +57,7 @@ const TestsAndExamplesOptions = struct {
 
 pub fn buildTestsAndExamplesForTarget(b: *Builder, options: TestsAndExamplesOptions) void {
     const test_exe = b.addTest(.{
-        .root_source_file = .{ .path = "src/lib.zig" },
+        .root_source_file = b.path("src/lib.zig"),
         .target = options.target,
         .optimize = options.optimize,
     });
@@ -91,7 +91,7 @@ const ExampleOptions = struct {
 pub fn addExample(b: *Builder, options: ExampleOptions) void {
     const exe = b.addExecutable(.{
         .name = options.name,
-        .root_source_file = .{ .path = b.pathJoin(&.{ "examples", b.fmt("{s}.zig", .{options.name}) }) },
+        .root_source_file = b.path(b.pathJoin(&.{ "examples", b.fmt("{s}.zig", .{options.name}) })),
         .target = options.target,
         .optimize = options.optimize,
     });
