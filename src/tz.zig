@@ -171,7 +171,7 @@ pub const DataBase = struct {
     fn getLocalTimeZoneFromEtcLocaltime(this: *@This()) !?TimeZone {
         const cwd = std.fs.cwd();
 
-        var path_to_localtime_buf: [std.fs.MAX_PATH_BYTES]u8 = undefined;
+        var path_to_localtime_buf: [std.fs.max_path_bytes]u8 = undefined;
         const path_to_localtime = cwd.readLink("/etc/localtime", &path_to_localtime_buf) catch |err| switch (err) {
             error.FileNotFound => return null,
             else => return err,

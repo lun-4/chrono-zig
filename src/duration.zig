@@ -35,7 +35,7 @@ pub const HoursMinutesSeconds = packed struct(i32) {
 
         const string = if (is_sign) hhmmss_string[1..] else hhmmss_string;
 
-        var segment_iter = std.mem.split(u8, string, ":");
+        var segment_iter = std.mem.splitAny(u8, string, ":");
         const hour_string = segment_iter.next() orelse return error.InvalidFormat;
         const hours = std.fmt.parseInt(u19, hour_string, 10) catch |err| switch (err) {
             error.InvalidCharacter => return error.InvalidFormat,

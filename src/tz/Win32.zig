@@ -102,7 +102,7 @@ pub fn designationAtTimestamp(this: *const @This(), timestamp_utc: i64) ?[]const
 
     const designation_utf16_len = std.mem.indexOfScalar(u16, designation_utf16, 0) orelse designation_utf16.len;
     var designation_buf: [64]u8 = undefined;
-    const designation_len = std.unicode.utf16leToUtf8(designation_buf[0..], designation_utf16[0..designation_utf16_len]) catch return null;
+    const designation_len = std.unicode.utf16LeToUtf8(designation_buf[0..], designation_utf16[0..designation_utf16_len]) catch return null;
     const designation = designation_buf[0..designation_len];
 
     const gop = this.string_pool.getOrPut(this.gpa, designation) catch return null;

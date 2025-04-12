@@ -462,7 +462,7 @@ fn parseRule(_string: []const u8) !Rule {
         if (julian_day0 > 365) return error.InvalidFormat;
         return TZ.Rule{ .JulianDayZero = .{ .day = julian_day0, .time = time } };
     } else if (string[0] == 'M') {
-        var split_iter = std.mem.split(u8, string[1..], ".");
+        var split_iter = std.mem.splitAny(u8, string[1..], ".");
         const m_str = split_iter.next() orelse return error.InvalidFormat;
         const n_str = split_iter.next() orelse return error.InvalidFormat;
         const d_str = split_iter.next() orelse return error.InvalidFormat;
