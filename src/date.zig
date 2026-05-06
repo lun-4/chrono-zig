@@ -97,15 +97,11 @@ pub const YearMonthDay = packed struct(i32) {
 
     pub fn format(
         this: @This(),
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = fmt;
-        _ = options;
+        writer: *std.Io.Writer,
+    ) std.Io.Writer.Error!void {
         const sign_str = if (this.year < 0) "-" else "";
 
-        try std.fmt.format(writer, "{s}{:0>4}-{:0>2}-{:0>2}", .{ sign_str, @abs(this.year), @intFromEnum(this.month), this.day });
+        try writer.print("{s}{d:0>4}-{d:0>2}-{d:0>2}", .{ sign_str, @abs(this.year), @intFromEnum(this.month), this.day });
     }
 };
 
@@ -570,14 +566,14 @@ test "Yes, but how do you know this all really works?" {
     try std.testing.expectEqual(@as(i64, 719528), YearMonthDay.fromNumbers(1970, 1, 1).toDays());
     {
         const day719527 = YearMonthDay.fromDays(719528);
-        errdefer std.debug.print("day719528 = {}\n", .{day719527});
+        errdefer std.debug.print("day719528 = {f}\n", .{day719527});
         try std.testing.expectEqual(YearMonthDay.fromNumbers(1970, 1, 1), day719527);
     }
 
     try std.testing.expectEqual(@as(i64, 0), YearMonthDay.fromNumbers(1970, 1, 1).toDaysSinceUnixEpoch());
     {
         const day0 = YearMonthDay.fromDaysSinceUnixEpoch(0);
-        errdefer std.debug.print("day0 = {}\n", .{day0});
+        errdefer std.debug.print("day0 = {f}\n", .{day0});
         try std.testing.expectEqualDeep(YearMonthDay.fromNumbers(1970, 1, 1), day0);
     }
     try std.testing.expectEqual(Weekday.thu, Weekday.fromDaysSinceUnixEpoch(0));
@@ -601,7 +597,7 @@ test "Yes, but how do you know this all really works?" {
 
                 {
                     const ymd = YearMonthDay.fromDaysSinceUnixEpoch(days_since_epoch);
-                    errdefer std.debug.print("{:0>4}-{:0>2}-{:0>2}; from days since unix epoch = {}\n", .{ year, @intFromEnum(month), day, ymd });
+                    errdefer std.debug.print("{d:0>4}-{d:0>2}-{d:0>2}; from days since unix epoch = {f}\n", .{ year, @intFromEnum(month), day, ymd });
                     try std.testing.expectEqualDeep(year_month_day, ymd);
                 }
 

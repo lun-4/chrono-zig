@@ -18,12 +18,12 @@ pub fn constructWindowsToIANAHashmap(gpa: std.mem.Allocator) !WindowsToIANAHashm
     var map = WindowsToIANAHashmap{};
     try map.ensureUnusedCapacity(gpa, DATA.len);
     for (DATA) |datapoint| {
-        var identifiers = std.ArrayList(chrono.tz.Identifier).init(gpa);
-        defer identifiers.deinit();
+        var identifiers: std.ArrayList(chrono.tz.Identifier) = .empty;
+        defer identifiers.deinit(gpa);
         var iana_identifier_iter = std.mem.splitScalar(u8, datapoint.iana_identifiers, ' ');
         while (iana_identifier_iter.next()) |iana_identifier_string| {
             const iana_identifier = chrono.tz.Identifier.parse(iana_identifier_string) catch unreachable; // We are shipping all the data; it better parse
-            try identifiers.append(iana_identifier);
+            try identifiers.append(gpa, iana_identifier);
         }
 
         var key: TimeZoneTerritory = undefined;
@@ -44,7 +44,7 @@ pub fn constructWindowsToIANAHashmap(gpa: std.mem.Allocator) !WindowsToIANAHashm
             key.territory = null;
         }
 
-        map.putAssumeCapacityNoClobber(key, try identifiers.toOwnedSlice());
+        map.putAssumeCapacityNoClobber(key, try identifiers.toOwnedSlice(gpa));
     }
 
     return map;

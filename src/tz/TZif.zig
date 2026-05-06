@@ -400,10 +400,11 @@ pub fn parse(allocator: std.mem.Allocator, reader: anytype, seekableStream: anyt
 pub fn parseFile(allocator: std.mem.Allocator, path: []const u8) !TZif {
     const cwd = std.fs.cwd();
 
-    const file = try cwd.openFile(path, .{});
-    defer file.close();
+    const data = try cwd.readFileAlloc(allocator, path, std.math.maxInt(usize));
+    defer allocator.free(data);
 
-    return parse(allocator, file.reader(), file.seekableStream());
+    var fbs = std.io.fixedBufferStream(data);
+    return parse(allocator, fbs.reader(), &fbs);
 }
 
 const TransitionType = union(enum) {
@@ -491,13 +492,13 @@ test getTransitionTypeByTimestamp {
 
 test "parse invalid bytes" {
     var fbs = std.io.fixedBufferStream("dflkasjreklnlkvnalkfek");
-    try testing.expectError(error.TZifMissingMagic, parse(std.testing.allocator, fbs.reader(), fbs.seekableStream()));
+    try testing.expectError(error.TZifMissingMagic, parse(std.testing.allocator, fbs.reader(), &fbs));
 }
 
 test "parse UTC zoneinfo" {
     var fbs = std.io.fixedBufferStream(@embedFile("zoneinfo/UTC"));
 
-    var res = try parse(std.testing.allocator, fbs.reader(), fbs.seekableStream());
+    var res = try parse(std.testing.allocator, fbs.reader(), &fbs);
     defer res.deinit();
 
     try testing.expectEqual(Version.V2, res.version);
@@ -525,7 +526,7 @@ test "parse Pacific/Honolulu zoneinfo and calculate local times" {
 
     var fbs = std.io.fixedBufferStream(@embedFile("zoneinfo/Pacific/Honolulu"));
 
-    var res = try parse(std.testing.allocator, fbs.reader(), fbs.seekableStream());
+    var res = try parse(std.testing.allocator, fbs.reader(), &fbs);
     defer res.deinit();
 
     try testing.expectEqual(Version.V2, res.version);

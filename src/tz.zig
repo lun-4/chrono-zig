@@ -100,17 +100,19 @@ pub const DataBase = struct {
         }
 
         if (this.tzif_dir) |tzif_dir| parse_tzif_file: {
-            const tzif_file = tzif_dir.openFile(identifier.string, .{}) catch |err| switch (err) {
+            const tzif_data = tzif_dir.readFileAlloc(this.gpa, identifier.string, std.math.maxInt(usize)) catch |err| switch (err) {
                 error.FileNotFound => {
-                    log.debug("IANA identifier not found in zoneinfo dir: \"{}\"", .{std.zig.fmtEscapes(identifier.string)});
+                    log.debug("IANA identifier not found in zoneinfo dir: \"{s}\"", .{identifier.string});
                     break :parse_tzif_file;
                 },
                 else => return err,
             };
-            defer tzif_file.close();
+            defer this.gpa.free(tzif_data);
+
+            var fbs = std.io.fixedBufferStream(tzif_data);
 
             const tzif = try this.gpa.create(TZif);
-            tzif.* = try TZif.parse(this.gpa, tzif_file.reader(), tzif_file.seekableStream());
+            tzif.* = try TZif.parse(this.gpa, fbs.reader(), &fbs);
 
             const identifier_owned = try this.gpa.dupe(u8, identifier.string);
             try this.tzif_cache.putNoClobber(this.gpa, identifier_owned, tzif);
@@ -187,18 +189,18 @@ pub const DataBase = struct {
             return error.InvalidEtcLocalTimeSymlink;
         }
 
-        var identifier_string = std.ArrayList(u8).init(this.gpa);
-        defer identifier_string.deinit();
+        var identifier_string: std.ArrayList(u8) = .empty;
+        defer identifier_string.deinit(this.gpa);
 
         while (component_iter.next()) |component| {
-            if (identifier_string.items.len > 0) try identifier_string.append('/');
-            try identifier_string.appendSlice(component.name);
+            if (identifier_string.items.len > 0) try identifier_string.append(this.gpa, '/');
+            try identifier_string.appendSlice(this.gpa, component.name);
         }
 
         const identifier = try Identifier.parse(identifier_string.items);
         const timezone = try this.getTimeZone(identifier);
 
-        this.localtime_identifier = try identifier_string.toOwnedSlice();
+        this.localtime_identifier = try identifier_string.toOwnedSlice(this.gpa);
 
         return timezone;
     }

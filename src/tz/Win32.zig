@@ -209,22 +209,17 @@ const TIME_ZONE_INFORMATION = extern struct {
 
     pub fn format(
         this: @This(),
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = fmt;
-        _ = options;
-
+        writer: *std.Io.Writer,
+    ) std.Io.Writer.Error!void {
         const std_len = std.mem.indexOfScalar(u16, &this.StandardName, 0) orelse this.StandardName.len;
         const dst_len = std.mem.indexOfScalar(u16, &this.DaylightName, 0) orelse this.DaylightName.len;
 
-        try std.fmt.format(writer, "TIME_ZONE_INFORMATION{{ .Bias = {}, .StandardName = {}, .StandardDate = {}, .StandardBias = {}, .DaylightName = {}, .DaylightDate = {}, .DaylightBias = {} }}", .{
+        try writer.print("TIME_ZONE_INFORMATION{{ .Bias = {d}, .StandardName = {f}, .StandardDate = {f}, .StandardBias = {d}, .DaylightName = {f}, .DaylightDate = {f}, .DaylightBias = {d} }}", .{
             this.Bias,
-            std.unicode.fmtUtf16le(this.StandardName[0..std_len]),
+            std.unicode.fmtUtf16Le(this.StandardName[0..std_len]),
             this.StandardDate,
             this.StandardBias,
-            std.unicode.fmtUtf16le(this.DaylightName[0..dst_len]),
+            std.unicode.fmtUtf16Le(this.DaylightName[0..dst_len]),
             this.DaylightDate,
             this.DaylightBias,
         });

@@ -23,10 +23,10 @@ pub fn main() !void {
     const date = chrono.date.YearMonthDay.fromDaysSinceUnixEpoch(@intCast(@divFloor(timestamp_local, std.time.s_per_day)));
     const time = chrono.Time{ .secs = @intCast(@mod(timestamp_local, std.time.s_per_day)), .frac = 0 };
 
-    std.debug.print("The current date is {}, and the time is {} in the {?s} timezone\n", .{ date, time, designation });
+    std.debug.print("The current date is {f}, and the time is {f} in the {?s} timezone\n", .{ date, time, designation });
 
     if (timezone.identifier()) |identifier| {
-        std.debug.print("The IANA time zone identifier = \"{}\"\n", .{std.zig.fmtEscapes(identifier.string)});
+        std.debug.print("The IANA time zone identifier = \"{s}\"\n", .{identifier.string});
     } else {
         std.debug.print("The IANA time zone identifier is unknown\n", .{});
     }

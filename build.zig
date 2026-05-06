@@ -56,13 +56,18 @@ const TestsAndExamplesOptions = struct {
 };
 
 pub fn buildTestsAndExamplesForTarget(b: *Builder, options: TestsAndExamplesOptions) void {
-    const test_exe = b.addTest(.{
+    const test_mod = b.createModule(.{
         .root_source_file = b.path("src/lib.zig"),
         .target = options.target,
         .optimize = options.optimize,
     });
+    const test_exe = b.addTest(.{
+        .root_module = test_mod,
+        .use_llvm = true,
+    });
 
     const run_tests = b.addRunArtifact(test_exe);
+    run_tests.skip_foreign_checks = true;
 
     if (options.test_step) |test_step| {
         test_step.dependOn(&run_tests.step);
@@ -89,13 +94,17 @@ const ExampleOptions = struct {
     check_step: ?*std.Build.Step,
 };
 pub fn addExample(b: *Builder, options: ExampleOptions) void {
-    const exe = b.addExecutable(.{
-        .name = options.name,
+    const exe_mod = b.createModule(.{
         .root_source_file = b.path(b.pathJoin(&.{ "examples", b.fmt("{s}.zig", .{options.name}) })),
         .target = options.target,
         .optimize = options.optimize,
     });
-    exe.root_module.addImport("chrono", options.chrono);
+    exe_mod.addImport("chrono", options.chrono);
+    const exe = b.addExecutable(.{
+        .name = options.name,
+        .root_module = exe_mod,
+        .use_llvm = true,
+    });
 
     if (options.check_step) |check_step| {
         check_step.dependOn(&exe.step);

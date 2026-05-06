@@ -5,7 +5,7 @@ const Time = @import("./Time.zig");
 pub fn rfc3339UTCStringFromUnixTimestamp(str_buffer: []u8, timestamp: i64) ![]const u8 {
     const ymd = date.YearMonthDay.fromDaysSinceUnixEpoch(@intCast(@divFloor(timestamp, std.time.s_per_day)));
     const time = try Time.fromNumSecondsFromMidnight(@intCast(@mod(timestamp, std.time.s_per_day)), 0);
-    return try std.fmt.bufPrint(str_buffer, "{}T{}Z", .{ ymd, time });
+    return try std.fmt.bufPrint(str_buffer, "{f}T{f}Z", .{ ymd, time });
 }
 
 test rfc3339UTCStringFromUnixTimestamp {

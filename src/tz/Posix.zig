@@ -209,22 +209,17 @@ pub const Rule = union(enum) {
 
     pub fn format(
         this: @This(),
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = fmt;
-        _ = options;
-
+        writer: *std.Io.Writer,
+    ) std.Io.Writer.Error!void {
         switch (this) {
             .JulianDay => |julian_day| {
-                try std.fmt.format(writer, "J{}", .{julian_day.day});
+                try writer.print("J{d}", .{julian_day.day});
             },
             .JulianDayZero => |julian_day_zero| {
-                try std.fmt.format(writer, "{}", .{julian_day_zero.day});
+                try writer.print("{d}", .{julian_day_zero.day});
             },
             .MonthNthWeekday => |month_week_day| {
-                try std.fmt.format(writer, "M{}.{}.{}", .{
+                try writer.print("M{d}.{d}.{d}", .{
                     @intFromEnum(month_week_day.month),
                     month_week_day.n,
                     month_week_day.weekday.toIntSun0(),
@@ -242,12 +237,12 @@ pub const Rule = union(enum) {
             const minutes = @mod(@divTrunc(time, std.time.s_per_min), 60);
             const hours = @divTrunc(@divTrunc(time, std.time.s_per_min), 60);
 
-            try std.fmt.format(writer, "/{}", .{hours});
+            try writer.print("/{d}", .{hours});
             if (minutes != 0 or seconds != 0) {
-                try std.fmt.format(writer, ":{}", .{minutes});
+                try writer.print(":{d}", .{minutes});
             }
             if (seconds != 0) {
-                try std.fmt.format(writer, ":{}", .{seconds});
+                try writer.print(":{d}", .{seconds});
             }
         }
     }
@@ -255,13 +250,8 @@ pub const Rule = union(enum) {
 
 pub fn format(
     this: @This(),
-    comptime fmt: []const u8,
-    options: std.fmt.FormatOptions,
-    writer: anytype,
-) !void {
-    _ = fmt;
-    _ = options;
-
+    writer: *std.Io.Writer,
+) std.Io.Writer.Error!void {
     const should_quote_std_designation = for (this.std_designation) |character| {
         if (!std.ascii.isAlphabetic(character)) {
             break true;
@@ -281,12 +271,12 @@ pub fn format(
     const std_minutes = @rem(@divTrunc(std_offset_west, std.time.s_per_min), 60);
     const std_hours = @divTrunc(@divTrunc(std_offset_west, std.time.s_per_min), 60);
 
-    try std.fmt.format(writer, "{}", .{std_hours});
+    try writer.print("{d}", .{std_hours});
     if (std_minutes != 0 or std_seconds != 0) {
-        try std.fmt.format(writer, ":{}", .{if (std_minutes < 0) -std_minutes else std_minutes});
+        try writer.print(":{d}", .{if (std_minutes < 0) -std_minutes else std_minutes});
     }
     if (std_seconds != 0) {
-        try std.fmt.format(writer, ":{}", .{if (std_seconds < 0) -std_seconds else std_seconds});
+        try writer.print(":{d}", .{if (std_seconds < 0) -std_seconds else std_seconds});
     }
 
     if (this.dst_designation) |dst_designation| {
@@ -311,18 +301,18 @@ pub fn format(
             const dst_minutes = @rem(@divTrunc(dst_offset_west, std.time.s_per_min), 60);
             const dst_hours = @divTrunc(@divTrunc(dst_offset_west, std.time.s_per_min), 60);
 
-            try std.fmt.format(writer, "{}", .{dst_hours});
+            try writer.print("{d}", .{dst_hours});
             if (dst_minutes != 0 or dst_seconds != 0) {
-                try std.fmt.format(writer, ":{}", .{if (dst_minutes < 0) -dst_minutes else dst_minutes});
+                try writer.print(":{d}", .{if (dst_minutes < 0) -dst_minutes else dst_minutes});
             }
             if (dst_seconds != 0) {
-                try std.fmt.format(writer, ":{}", .{if (dst_seconds < 0) -dst_seconds else dst_seconds});
+                try writer.print(":{d}", .{if (dst_seconds < 0) -dst_seconds else dst_seconds});
             }
         }
     }
 
     if (this.dst_range) |dst_range| {
-        try std.fmt.format(writer, ",{},{}", .{ dst_range.start, dst_range.end });
+        try writer.print(",{f},{f}", .{ dst_range.start, dst_range.end });
     }
 }
 
@@ -354,7 +344,7 @@ test format {
         },
     };
 
-    try std.testing.expectFmt("MST7MDT,M3.2.0,M11.1.0", "{}", .{america_denver});
+    try std.testing.expectFmt("MST7MDT,M3.2.0,M11.1.0", "{f}", .{america_denver});
 
     const europe_berlin = TZ{
         .std_designation = "CET",
@@ -380,7 +370,7 @@ test format {
             },
         },
     };
-    try std.testing.expectFmt("CET-1CEST,M3.5.0,M10.5.0/3", "{}", .{europe_berlin});
+    try std.testing.expectFmt("CET-1CEST,M3.5.0,M10.5.0/3", "{f}", .{europe_berlin});
 
     const antarctica_syowa = TZ{
         .std_designation = "+03",
@@ -389,7 +379,7 @@ test format {
         .dst_offset = undefined,
         .dst_range = null,
     };
-    try std.testing.expectFmt("<+03>-3", "{}", .{antarctica_syowa});
+    try std.testing.expectFmt("<+03>-3", "{f}", .{antarctica_syowa});
 
     const pacific_chatham = TZ{
         .std_designation = "+1245",
@@ -415,7 +405,7 @@ test format {
             },
         },
     };
-    try std.testing.expectFmt("<+1245>-12:45<+1345>,M9.5.0/2:45,M4.1.0/3:45", "{}", .{pacific_chatham});
+    try std.testing.expectFmt("<+1245>-12:45<+1345>,M9.5.0/2:45,M4.1.0/3:45", "{f}", .{pacific_chatham});
 }
 
 fn parseRule(_string: []const u8) !Rule {
